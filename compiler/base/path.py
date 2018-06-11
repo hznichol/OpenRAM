@@ -4,6 +4,9 @@ import debug
 from vector import vector
 from utils import snap_to_grid
 
+def hello():
+    print("Hello")
+
 def create_rectilinear_route(my_list):
     """ Add intermediate nodes if it isn't rectilinear. Also skip
         repeated nodes. Also, convert to vector if the aren't."""

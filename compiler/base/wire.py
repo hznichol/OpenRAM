@@ -1,7 +1,7 @@
 from tech import drc
 import debug
 from contact import contact
-from path import path
+from layer_path import path
 
 class wire(path):
     """ 

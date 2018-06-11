@@ -298,15 +298,18 @@ class layout(lef.lef):
 
     def add_path(self, layer, coordinates, width=None):
         """Connects a routing path on given layer,coordinates,width."""
+        #import sys
+        #sys.path.insert(0, '/soe/hznichol/OpenRAM/compiler/base')
+        import layer_path
+        #print(layer_path)
         debug.info(4,"add path " + str(layer) + " " + str(coordinates))
-        import path
         # NOTE: (UNTESTED) add_path(...) is currently not used
         # negative layers indicate "unused" layers in a given technology
         #layer_num = techlayer[layer]
         #if layer_num >= 0:
         #    self.objs.append(geometry.path(layer_num, coordinates, width))
-
-        path.path(obj=self,
+        #print(path)
+        layer_path.path(obj=self,
                   layer=layer, 
                   position_list=coordinates, 
                   width=width)
