@@ -7,6 +7,9 @@ import charutils as ch
 import tech
 import numpy as np
 from globals import OPTS
+from joblib import Parallel, delayed
+#import multiprocessing
+import dill 
 
 class lib:
     """ lib file generation."""
@@ -68,13 +71,29 @@ class lib:
         
     def characterize_corners(self):
         """ Characterize the list of corners. """
-        for (self.corner,lib_name) in zip(self.corners,self.lib_files):
-            debug.info(1,"Corner: " + str(self.corner))
-            (self.process, self.voltage, self.temperature) = self.corner
-            self.lib = open(lib_name, "w")
-            debug.info(1,"Writing to {0}".format(lib_name))
-            self.characterize()
-            self.lib.close()
+        # for (self.corner,lib_name) in zip(self.corners,self.lib_files):
+            # debug.info(1,"Corner: " + str(self.corner))
+            # (self.process, self.voltage, self.temperature) = self.corner
+            # self.lib = open(lib_name, "w")
+            # debug.info(1,"Writing to {0}".format(lib_name))
+            # self.characterize()
+            # self.lib.close()
+        inputs = zip(self.corners,self.lib_files)
+        num_cores = 2 #Assuming only two corners.
+        results = Parallel(n_jobs=num_cores)(delayed(self.parallel_characterize)(i) for i in inputs)
+
+            
+    def parallel_characterize(self, corner_info):
+        #The printing is going to be really wonky as the processes will be independent but I hope it works otherwise (fingers crossed)
+        self.corner = corner_info[0]
+        lib_name = corner_info[1]
+
+        debug.info(1,"Corner: " + str(self.corner))
+        (self.process, self.voltage, self.temperature) = self.corner
+        self.lib = open(lib_name, "w")
+        debug.info(1,"Writing to {0}".format(lib_name))
+        self.characterize()
+        self.lib.close()
 
     def characterize(self):
         """ Characterize the current corner. """
@@ -440,27 +459,42 @@ class lib:
 
     def compute_delay(self):
         """ Do the analysis if we haven't characterized the SRAM yet """
-        try:
-            self.d
-        except AttributeError:
-            self.d = delay.delay(self.sram, self.sp_file, self.corner)
-            if self.use_model:
-                self.char_results = self.d.analytical_delay(self.sram,self.slews,self.loads)
-            else:
-                probe_address = "1" * self.sram.addr_size
-                probe_data = self.sram.word_size - 1
-                self.char_results = self.d.analyze(probe_address, probe_data, self.slews, self.loads)
+        # try:
+            # self.d
+        # except AttributeError:
+            # self.d = delay.delay(self.sram, self.sp_file, self.corner)
+            # if self.use_model:
+                # self.char_results = self.d.analytical_delay(self.sram,self.slews,self.loads)
+            # else:
+                # probe_address = "1" * self.sram.addr_size
+                # probe_data = self.sram.word_size - 1
+                # self.char_results = self.d.analyze(probe_address, probe_data, self.slews, self.loads)
+        
+        #Running all the corners
+        self.d = delay.delay(self.sram, self.sp_file, self.corner)
+        if self.use_model:
+            self.char_results = self.d.analytical_delay(self.sram,self.slews,self.loads)
+        else:
+            probe_address = "1" * self.sram.addr_size
+            probe_data = self.sram.word_size - 1
+            self.char_results = self.d.analyze(probe_address, probe_data, self.slews, self.loads)
 
 
     def compute_setup_hold(self):
         """ Do the analysis if we haven't characterized a FF yet """
         # Do the analysis if we haven't characterized a FF yet
-        try:
-            self.sh
-        except AttributeError:
-            self.sh = setup_hold.setup_hold(self.corner)
-            if self.use_model:
-                self.times = self.sh.analytical_setuphold(self.slews,self.loads)
-            else:
-                self.times = self.sh.analyze(self.slews,self.slews)
+        # try:
+            # self.sh
+        # except AttributeError:
+            # self.sh = setup_hold.setup_hold(self.corner)
+            # if self.use_model:
+                # self.times = self.sh.analytical_setuphold(self.slews,self.loads)
+            # else:
+                # self.times = self.sh.analyze(self.slews,self.slews)
+        #Run on all corners
+        self.sh = setup_hold.setup_hold(self.corner)
+        if self.use_model:
+            self.times = self.sh.analytical_setuphold(self.slews,self.loads)
+        else:
+            self.times = self.sh.analyze(self.slews,self.slews)
                 

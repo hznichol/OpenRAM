@@ -4,7 +4,7 @@ num_banks = 1
 
 tech_name = "freepdk45"
 process_corners = ["TT"]
-supply_voltages = [1.0]
+supply_voltages = [1.0, 1.1]
 temperatures = [25]
 
 output_path = "temp"
